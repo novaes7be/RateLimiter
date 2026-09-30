@@ -1,6 +1,5 @@
-package com.contatodireto.ratelimiterproject;
+package com.contatodireto.ratelimiterproject.core;
 
-import com.contatodireto.ratelimiterproject.core.TokenBucket;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
