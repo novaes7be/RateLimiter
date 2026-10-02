@@ -1,14 +1,14 @@
 package com.contatodireto.ratelimiterproject.web;
 
 import com.contatodireto.ratelimiterproject.config.BucketConfig;
-import com.contatodireto.ratelimiterproject.core.TokenBucket;
 import com.contatodireto.ratelimiterproject.core.TokenBucketService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,14 +24,15 @@ public class RateLimiterInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
 
         String ip = request.getRemoteAddr();
         String route = request.getRequestURI();
         String key = ip + ":" + route;
-
-
-
-        return HandlerInterceptor.super.preHandle(request, response, handler);
+        BucketConfig config = bucketConfigMap.getOrDefault(route, new BucketConfig(10, 1.0));
+        if (tokenBucketService.allow(key, config, Instant.now())) return true;
+        response.setStatus(429);
+        response.setHeader("Retry-After", "1");
+        return false;
     }
 }
