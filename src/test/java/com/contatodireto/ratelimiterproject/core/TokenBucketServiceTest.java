@@ -4,12 +4,10 @@ import com.contatodireto.ratelimiterproject.config.BucketConfig;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TockenBucketServiceTest {
+public class TokenBucketServiceTest {
 
     // Test tokenBucketService.allow();
 
