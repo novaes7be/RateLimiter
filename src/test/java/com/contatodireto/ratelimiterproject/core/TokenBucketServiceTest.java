@@ -1,35 +1,54 @@
 package com.contatodireto.ratelimiterproject.core;
 
 import com.contatodireto.ratelimiterproject.config.BucketConfig;
+import com.contatodireto.ratelimiterproject.storage.BucketRepository;
+import com.contatodireto.ratelimiterproject.storage.InMemoryBucketRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 public class TokenBucketServiceTest {
 
     // Test tokenBucketService.allow();
 
-    @Test
-    public void firstRequestNewKey() {
 
-        TokenBucketService service = new TokenBucketService();
-        BucketConfig config = new BucketConfig(1, 5.0);
-        assertTrue(service.allow("testKey", config , Instant.now()));
+    BucketRepository mockRepo;
+
+    @BeforeEach
+    public void resetMock() {
+        mockRepo = mock(BucketRepository.class);
     }
 
     @Test
-    public void newKeyLastToken() {
-        TokenBucketService service = new TokenBucketService();
+    public void firstRequestNewKey() {
+        when(mockRepo.findByKey(anyString())).thenReturn(Optional.empty());
+
+        TokenBucketService service = new TokenBucketService(mockRepo);
         BucketConfig config = new BucketConfig(1, 5.0);
+
+        assertTrue(service.allow("testKey", config, Instant.now()));
+    }
+
+
+    @Test
+    public void newKeyLastToken() {
+        BucketRepository repository = new InMemoryBucketRepository();
+        TokenBucketService service = new TokenBucketService(repository);
+        BucketConfig config = new BucketConfig(1, 5.0);
+
         assertTrue(service.allow("testKey", config, Instant.now()));
         assertFalse(service.allow("testKey", config, Instant.now()));
     }
 
     @Test
     public void differentKeysAreIndependent() {
-        TokenBucketService service = new TokenBucketService();
+        BucketRepository repository = new InMemoryBucketRepository();
+        TokenBucketService service = new TokenBucketService(repository);
         BucketConfig config = new BucketConfig(1, 5.0);
 
         assertTrue(service.allow("IP1", config, Instant.now()));
@@ -40,7 +59,8 @@ public class TokenBucketServiceTest {
 
     @Test
     public void refillThroughService() {
-        TokenBucketService service = new TokenBucketService();
+        BucketRepository repository = new InMemoryBucketRepository();
+        TokenBucketService service = new TokenBucketService(repository);
         BucketConfig config = new BucketConfig(1, 5.0);
         Instant t1 = Instant.parse("2024-01-01T10:00:00Z");
 
